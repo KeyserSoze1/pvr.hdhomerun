@@ -60,7 +60,8 @@ bool HDHomeRunTuners::Update(int nMode)
 
   for (nIndex = 0; nIndex < nCount; nIndex++)
   {
-	  CStdString strUrl, strJson;
+	  CStdString strUrl, strJson, strDisc;
+          Json::Value jsonDisc;
 	  Tuner* pTuner = NULL;
 
 	  if (nMode & UpdateDiscover)
@@ -94,12 +95,17 @@ bool HDHomeRunTuners::Update(int nMode)
 
 	  if (nMode & UpdateLineUp)
 	  {
-		  strUrl.Format("%s/lineup.json", pTuner->Device.base_url);
+		  strUrl.Format("%s/discover.json", pTuner->Device.base_url);
 
-		  XBMC->Log(LOG_DEBUG, "Requesting HDHomeRun lineup: %s", strUrl.c_str());
+                  if (GetFileContents(strUrl, strDisc) > 0)
+                  {
+                          jsonReader.parse(strDisc, jsonDisc);
 
-		  if (GetFileContents(strUrl, strJson) > 0)
-			  jsonReader.parse(strJson, pTuner->LineUp);
+		          XBMC->Log(LOG_DEBUG, "Requesting HDHomeRun lineup: %s", jsonDisc["LineupURL"].asString().c_str());
+
+		          if (GetFileContents(jsonDisc["LineupURL"].asString(), strJson) > 0)
+			          jsonReader.parse(strJson, pTuner->LineUp);
+                  }
 	  }
 
 	  //
